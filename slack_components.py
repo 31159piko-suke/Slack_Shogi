@@ -4,7 +4,9 @@ from PIL import Image
 from collections import defaultdict
 
 
-def generate_board(
+def generate_board_image(
+    user: str,
+    ts: str,
     ban: list,
     teban_motigoma: list = [],
     unteban_motigoma: list = [],
@@ -66,7 +68,7 @@ def generate_board(
     fig = plt.figure(figsize=(15, 15))
     plt.imshow(board)
     plt.axis("off")
-    fig.savefig("/tmp/img.png", bbox_inches="tight", pad_inches=0)
+    fig.savefig(f"/tmp/{user}:{ts}.png", bbox_inches="tight", pad_inches=0)
 
 
 def compress_status(
@@ -106,34 +108,100 @@ def deconpress_status(status: str):
     teban = status_[3]
     unteban = status_[4]
     last_sashite = [int(i) for i in status_[5].split(",")] if status_[5] else [0, 0]
-    tesu = int(status_[6]) + 1
+    tesu = int(status_[6])
     return ban, teban_motigoma, unteban_motigoma, teban, unteban, last_sashite, tesu
 
 
 def generate_block(
-    url: str, block_id: str, teban: str, sashite: str = "", tesu: int = 0
+    url: str,
+    block_id: str,
+    user: str,
+    tesu: int = 0,
+    sashite: str = "",
+    is_end: bool = False,
+    winner: str = "",
 ):
     block = [
-        {
-            "type": "image",
-            "title": {
-                "type": "plain_text",
-                "text": f"{tesu}手目 {sashite}",
-                "emoji": True,
-            },
-            "image_url": url,
-            "alt_text": f"{tesu}手目 {sashite}",
-        },
-        {
-            "type": "input",
-            "block_id": block_id,
-            "dispatch_action": True,
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "plain_text_input-action",
-                "dispatch_action_config": {"trigger_actions_on": ["on_enter_pressed"]},
-            },
-            "label": {"type": "plain_text", "text": f"{teban} の手番じゃ！", "emoji": True},
-        },
+        button_block(is_end),
+        image_block(url, tesu, sashite),
+        input_block(block_id, user),
     ]
+    block_end = [
+        button_block(is_end),
+        image_block(url, tesu, sashite),
+        end_block(winner),
+    ]
+    return block_end if is_end else block
+
+
+def button_block(is_end: bool = False):
+    block = {
+        "type": "actions",
+        "elements": [
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "投了", "emoji": True},
+                "action_id": "lose-action",
+            },
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
+                "action_id": "show-action",
+            },
+        ],
+    }
+    block_end = {
+        "type": "actions",
+        "elements": [
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
+                "action_id": "show-action",
+            },
+        ],
+    }
+
+    return block_end if is_end else block
+
+
+def input_block(block_id, user):
+    return {
+        "type": "input",
+        "block_id": block_id,
+        "dispatch_action": True,
+        "element": {
+            "type": "plain_text_input",
+            "action_id": "plain_text_input-action",
+            "dispatch_action_config": {"trigger_actions_on": ["on_enter_pressed"]},
+        },
+        "label": {
+            "type": "plain_text",
+            "text": f"{user} の手番じゃ！",
+            "emoji": True,
+        },
+    }
+
+
+def image_block(url, tesu, sashite):
+    block = {
+        "type": "image",
+        "title": {
+            "type": "plain_text",
+            "text": f"{tesu}手目 {sashite}",
+            "emoji": True,
+        },
+        "image_url": url,
+        "alt_text": f"{tesu}手目 {sashite}",
+    }
+    return block
+
+
+def end_block(winner):
+    block = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*{winner}の勝ちじゃ！！*",
+        },
+    }
     return block
