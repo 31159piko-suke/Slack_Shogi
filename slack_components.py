@@ -112,7 +112,7 @@ def deconpress_status(status: str):
     return ban, teban_motigoma, unteban_motigoma, teban, unteban, last_sashite, tesu
 
 
-def generate_block(
+def generate_board_block(
     url: str,
     block_id: str,
     user: str,
@@ -122,68 +122,20 @@ def generate_block(
     winner: str = "",
 ):
     block = [
-        button_block(is_end),
-        image_block(url, tesu, sashite),
-        input_block(block_id, user),
+        image_section(url, tesu, sashite),
+        button_section(is_end),
+        input_section(block_id, user),
     ]
-    block_end = [
-        button_block(is_end),
-        image_block(url, tesu, sashite),
-        end_block(winner),
+    end_block = [
+        image_section(url, tesu, sashite),
+        button_section(is_end),
+        end_section(block_id, winner),
     ]
-    return block_end if is_end else block
+    return end_block if is_end else block
 
 
-def button_block(is_end: bool = False):
-    block = {
-        "type": "actions",
-        "elements": [
-            {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "投了", "emoji": True},
-                "action_id": "lose-action",
-            },
-            {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
-                "action_id": "show-action",
-            },
-        ],
-    }
-    block_end = {
-        "type": "actions",
-        "elements": [
-            {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
-                "action_id": "show-action",
-            },
-        ],
-    }
-
-    return block_end if is_end else block
-
-
-def input_block(block_id, user):
-    return {
-        "type": "input",
-        "block_id": block_id,
-        "dispatch_action": True,
-        "element": {
-            "type": "plain_text_input",
-            "action_id": "plain_text_input-action",
-            "dispatch_action_config": {"trigger_actions_on": ["on_enter_pressed"]},
-        },
-        "label": {
-            "type": "plain_text",
-            "text": f"{user} の手番じゃ！",
-            "emoji": True,
-        },
-    }
-
-
-def image_block(url, tesu, sashite):
-    block = {
+def image_section(url: str, tesu: str, sashite: str):
+    section = {
         "type": "image",
         "title": {
             "type": "plain_text",
@@ -193,15 +145,81 @@ def image_block(url, tesu, sashite):
         "image_url": url,
         "alt_text": f"{tesu}手目 {sashite}",
     }
-    return block
+    return section
 
 
-def end_block(winner):
-    block = {
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": f"*{winner}の勝ちじゃ！！*",
+def button_section(is_end: bool = False):
+    section = {
+        "type": "actions",
+        "elements": [
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "投了", "emoji": True},
+                "action_id": "button_lose_confirm-action",
+            },
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
+                "action_id": "button_show-action",
+            },
+        ],
+    }
+    end_section = {
+        "type": "actions",
+        "elements": [
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
+                "action_id": "button_show-action",
+            },
+        ],
+    }
+
+    return end_section if is_end else section
+
+
+def input_section(block_id: str, user: str):
+    section = {
+        "type": "input",
+        "block_id": block_id,
+        "dispatch_action": True,
+        "element": {
+            "type": "plain_text_input",
+            "action_id": "plain_text_input_update-action",
+            "dispatch_action_config": {"trigger_actions_on": ["on_enter_pressed"]},
+        },
+        "label": {
+            "type": "plain_text",
+            "text": f"<@{user}> の手番です！",
+            "emoji": True,
         },
     }
+    return section
+
+
+def end_section(block_id: str, winner: str):
+    section = {
+        "type": "section",
+        "block_id": block_id,
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*<@{winner}> の勝ちです！！*",
+        },
+    }
+    return section
+
+
+def generate_ephemeral_block(ts: str, status: str):
+    block = [
+        {
+            "type": "section",
+            "block_id": ":".join([ts, status]),
+            "text": {"type": "mrkdwn", "text": "本当に投了しますか？"},
+            "accessory": {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "はい", "emoji": True},
+                "action_id": "button_lose-action",
+            },
+        }
+    ]
     return block

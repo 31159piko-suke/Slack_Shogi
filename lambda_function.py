@@ -8,7 +8,8 @@ from s3 import put_s3_and_get_url
 from exceptions import ParseInputBaseError, ShogiBaseError
 from slack_components import (
     generate_board_image,
-    generate_block,
+    generate_board_block,
+    generate_ephemeral_block,
     compress_status,
     deconpress_status,
 )
@@ -30,51 +31,58 @@ def lambda_handler(event, context):
 
 
 @app.event("app_mention")
-def say_hello(ack, say, body):
+def say_hello(ack, say, body, client):
+    ack()
     channel = body["event"]["channel"]
+    user = body["event"]["user"]
     ts = body["event"]["ts"]
-    user = "<@" + body["event"]["user"] + ">"
+
     message = body["event"]["text"]
     opponent = re.findall(r"<@[A-Z0-9]{9}>", message)
 
     if len(opponent) != 1:
         say("対戦相手を一人選んでメンションしてください", replace_original=False)
     else:
-        user_dict = {0: user, 1: opponent[0]}
+        user_dict = {0: user, 1: opponent[0][2:-1]}
 
         hurigoma = int((np.random.random() * 2 // 1))
         teban_user = user_dict[hurigoma]
         unteban_user = user_dict[hurigoma ^ 1]
-        say(channel=channel, text=f"{teban_user}が先手じゃ！")
-        say(channel=channel, text=f"{unteban_user}が後手じゃ！")
 
-        ack()
+        try:
+            _ = client.users_profile_get(user=teban_user)["profile"]
+            _ = client.users_profile_get(user=unteban_user)["profile"]
+        except:
+            say("対戦相手を一人選んでメンションしてください", replace_original=False)
+        else:
+            say(f"*先手   <@{teban_user}> *    vs    * <@{unteban_user}>   後手*")
 
-        shogi = Shogi()
-        ban = shogi.board.tolist()
-        teban_motigoma = shogi.teban_motigoma
-        unteban_motigoma = shogi.unteban_motigoma
+            shogi = Shogi()
+            ban = shogi.board.tolist()
+            teban_motigoma = shogi.teban_motigoma
+            unteban_motigoma = shogi.unteban_motigoma
 
-        generate_board_image(user, ts, ban)
-        url = put_s3_and_get_url(user, ts)
-        status = compress_status(
-            ban, teban_motigoma, unteban_motigoma, teban_user, unteban_user
-        )
+            generate_board_image(user, ts, ban)
+            url = put_s3_and_get_url(user, ts)
+            status = compress_status(
+                ban, teban_motigoma, unteban_motigoma, teban_user, unteban_user
+            )
 
-        say(
-            channel=channel, text="text", blocks=generate_block(url, status, teban_user)
-        )
+            say(
+                channel=channel,
+                text="shogi",
+                blocks=generate_board_block(url, status, teban_user),
+            )
 
 
 def arc_func(ack):
-    ack()
+    ack("ack")
 
 
-def update_board(ack, respond, body, client):
-    ack()
+def update(respond, body, client):
     channel = body["channel"]["id"]
+    user = body["user"]["id"]
     ts = body["message"]["ts"]
-    user = "<@" + body["user"]["id"] + ">"
     status = body["actions"][0]["block_id"]
     sashite = body["actions"][0]["value"]
 
@@ -123,7 +131,7 @@ def update_board(ack, respond, body, client):
                 client.chat_update(
                     channel=channel,
                     ts=ts,
-                    blocks=generate_block(
+                    blocks=generate_board_block(
                         url, status, teban_user, tesu=tesu, sashite=sashite
                     ),
                     text=f"{tesu}手目 {sashite}",
@@ -132,12 +140,24 @@ def update_board(ack, respond, body, client):
         respond(f"{teban_user}の手番です", replace_original=False)
 
 
-def end(ack, respond, body, client):
-    ack()
-    channel = body["channel"]["id"]
+def lose_confirm(respond, body):
     ts = body["message"]["ts"]
-    user = "<@" + body["user"]["id"] + ">"
     status = body["message"]["blocks"][2]["block_id"]
+
+    respond(
+        blocks=generate_ephemeral_block(ts, status),
+        replace_original=False,
+    )
+
+
+def lose(respond, body, client):
+    channel = body["channel"]["id"]
+    user = body["user"]["id"]
+    block_id = body["actions"][0]["block_id"]
+    ts = block_id.split(":")[0]
+    status = block_id.split(":")[1]
+
+    respond("処理中...")
 
     (
         ban,
@@ -157,21 +177,22 @@ def end(ack, respond, body, client):
         client.chat_update(
             channel=channel,
             ts=ts,
-            blocks=generate_block(
+            blocks=generate_board_block(
                 url, status, teban_user, tesu, is_end=True, winner=unteban_user
             ),
             text=f"{tesu}手目",
         )
+        respond("あなたの負けです。お疲れ様でした。")
     else:
         respond(f"{teban_user}の手番です", replace_original=False)
 
 
-def show(ack, body, client):
-    ack()
+def show(body, client):
     channel = body["channel"]["id"]
+    user = body["user"]["id"]
     ts = body["message"]["ts"]
-    user = "<@" + body["user"]["id"] + ">"
     status = body["message"]["blocks"][2]["block_id"]
+    is_end = body["message"]["blocks"][2]["type"] == "section"
 
     (
         ban,
@@ -190,11 +211,14 @@ def show(ack, body, client):
     client.chat_update(
         channel=channel,
         ts=ts,
-        blocks=generate_block(url, status, teban_user, tesu),
+        blocks=generate_board_block(
+            url, status, teban_user, tesu, is_end=is_end, winner=unteban_user
+        ),
         text=f"{tesu}手目",
     )
 
 
-app.action("plain_text_input-action")(ack=arc_func, lazy=[update_board])
-app.action("lose-action")(ack=arc_func, lazy=[end])
-app.action("show-action")(ack=arc_func, lazy=[show])
+app.action("plain_text_input_update-action")(ack=arc_func, lazy=[update])
+app.action("button_lose-action")(ack=arc_func, lazy=[lose])
+app.action("button_lose_confirm-action")(ack=arc_func, lazy=[lose_confirm])
+app.action("button_show-action")(ack=arc_func, lazy=[show])

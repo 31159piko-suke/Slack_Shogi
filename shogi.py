@@ -154,6 +154,8 @@ class KomaActions:
 class Shogi:
     """
     <Class Shogi>
+
+    Manage the board and motigoma.
     """
 
     def __init__(
@@ -246,9 +248,6 @@ class Shogi:
         iti: int = None,
         nari: int = None,
     ):
-        """
-        Check which koma is moved, based on the previous turn's state.
-        """
         candi_dy, candi_dx = [], []
         action_candidates_list = np.array(self.action_dict[koma], dtype=object)
         if dousa:  # if dousa is specified, narrow the search direction.
