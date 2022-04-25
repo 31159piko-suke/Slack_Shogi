@@ -11,12 +11,12 @@ class ParseInput:
         input:
             sashite : "76歩"
         output:
-            [5, 2, "歩", None, None, None]
+            [5, 2, 1, None, None, None]
 
         input:
             sashite : "58金左"
         output:
-            [7, 4, "金", None, "左", None]
+            [7, 4, 5, None, 1, None]
         """
 
         self.last_sashite = last_sashite
