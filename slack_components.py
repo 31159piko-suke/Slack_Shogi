@@ -25,21 +25,13 @@ def generate_board_image(
             if koma == 0:
                 continue
             koma = Image.open(f"./images/{koma}.jpg")
-            koma = koma.resize((56 * 2, 60 * 2))
+            koma = koma.resize((54 * 2, 58 * 2))
             koma = np.array(koma)
 
             board[
-                y + 64 * i * 2 : y + 64 * i * 2 + 5,
-                200 + x + 60 * j * 2 + 5 : 200 + x + 60 * j * 2 + koma.shape[1] - 6,
-            ] = koma[:5, 7:-4]
-            board[
-                y + 64 * i * 2 + 5 : 64 * i * 2 + y + koma.shape[0] - 5,
-                200 + x + 60 * j * 2 + 5 : 200 + x + 60 * j * 2 + koma.shape[1] - 6,
-            ] = koma[5:-5, 7:-4]
-            board[
-                y + 64 * i * 2 + koma.shape[0] - 5 : y + 64 * i * 2 + koma.shape[0],
-                200 + x + 60 * j * 2 + 5 : 200 + x + 60 * j * 2 + koma.shape[1] - 6,
-            ] = koma[-5:, 7:-4]
+                y + 128 * i + 2 : y + 128 * i + koma.shape[0] + 2,
+                200 + x + 120 * j + 5 : 200 + x + 120 * j + koma.shape[1],
+            ] = koma[:, 5:]
 
     tmp_dict = defaultdict(int)
     for i in teban_motigoma:
@@ -68,7 +60,7 @@ def generate_board_image(
     fig = plt.figure(figsize=(15, 15))
     plt.imshow(board)
     plt.axis("off")
-    fig.savefig(f"/tmp/{user}:{ts}.png", bbox_inches="tight", pad_inches=0)
+    fig.savefig(f"/tmp/{user}:{ts}.jpg", bbox_inches="tight", pad_inches=0)
 
 
 def compress_status(

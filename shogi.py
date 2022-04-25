@@ -21,13 +21,13 @@ class InitGame:
     Attributes
     ----------
     board:
-        It is a Board :)
+        It is a Board.
 
     teban_motigoma:
-        Comas owned by the user who are on turn.
+        Komas owned by the user who are on turn.
 
     unteban_motigoma:
-        Comas owned by the user who are not on turn.
+        Komas owned by the user who are not on turn.
     """
 
     def __init__(self):

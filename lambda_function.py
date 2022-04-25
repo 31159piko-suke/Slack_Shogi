@@ -76,7 +76,7 @@ def say_hello(ack, say, body, client):
 
 
 def arc_func(ack):
-    ack("ack")
+    ack()
 
 
 def update(respond, body, client):

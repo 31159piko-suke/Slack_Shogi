@@ -6,6 +6,19 @@ class ParseInput:
         pass
 
     def parse(self, sashite: str, last_sashite: list):
+        """
+        For example:
+        input:
+            sashite : "76歩"
+        output:
+            [5, 2, "歩", None, None, None]
+
+        input:
+            sashite : "58金左"
+        output:
+            [7, 4, "金", None, "左", None]
+        """
+
         self.last_sashite = last_sashite
         replace_list = [
             "香車",
@@ -36,6 +49,18 @@ class ParseInput:
         return [suzi, dan, koma, dousa, iti, nari]
 
     def valid_fugo(self, sashite: str):
+        """
+        For example:
+        input:
+            sashite : "76歩"
+        output:
+            5, 2, "歩"
+
+        input:
+            sashite : "58金左"
+        output:
+            7, 4, "金左"
+        """
         fugo_dict = {
             "一": 1,
             "１": 1,
@@ -65,15 +90,15 @@ class ParseInput:
             "９": 9,
             "9": 9,
         }
-        if sashite[0] == "同":
+        if sashite[0] == "同":  # ex) 同銀
             suzi, dan = self.last_sashite
             return suzi, dan, sashite[1:]
 
-        elif len(sashite) >= 2:
+        elif len(sashite) >= 2:  # ex) 76歩
             if fugo_dict.get(sashite[0]) and fugo_dict.get(sashite[1]):
                 suzi, dan = fugo_dict.get(sashite[0]), fugo_dict.get(sashite[1])
                 suzi, dan = dan - 1, 9 - suzi
-                if len(sashite) >= 3 and sashite[2] == "同":
+                if len(sashite) >= 3 and sashite[2] == "同":  # ex) 88同銀
                     if suzi == self.last_sashite[0] and dan == self.last_sashite[1]:
                         return suzi, dan, sashite[3:]
                     raise UndefinedFugoError
@@ -82,6 +107,18 @@ class ParseInput:
         raise UndefinedFugoError
 
     def valid_koma(self, sashite: str):
+        """
+        For example:
+        input:
+            sashite : "歩"
+        output:
+            "歩", ""
+
+        input:
+            sashite : "金左"
+        output:
+            "金", "左"
+        """
         koma_dict = {
             "歩": 1,
             "と": 11,
@@ -106,6 +143,18 @@ class ParseInput:
         raise UndefinedMomaError
 
     def valid_dousa(self, sashite: str):
+        """
+        For example:
+        input:
+            sashite : ""
+        output:
+            None, None
+
+        input:
+            sashite : "左"
+        output:
+            None, "左"
+        """
         dousa_dict = {"上": 1, "引": 2, "寄": 3}
         if sashite:
             if dousa_dict.get(sashite[0]):
@@ -114,6 +163,18 @@ class ParseInput:
         return None, None
 
     def valid_iti(self, sashite: str):
+        """
+        For example:
+        input:
+            sashite : None
+        output:
+            None, None
+
+        input:
+            sashite : "左"
+        output:
+            1, ""
+        """
         iti_dict = {"左": 1, "右": 2, "直": 3}
         if sashite:
             if iti_dict.get(sashite[0]):
@@ -122,6 +183,18 @@ class ParseInput:
         return None, None
 
     def valid_nari(self, sashite: str):
+        """
+        For example:
+        input:
+            sashite : None
+        output:
+            None, None
+
+        input:
+            sashite : ""
+        output:
+            None, None
+        """
         nari_dict = {"成": 1, "不成": 2, "打": 3}
         if sashite:
             for i in range(len(sashite)):
