@@ -137,17 +137,30 @@ def update(respond, body, client):
                     text=f"{tesu}手目 {sashite}",
                 )
     else:
-        respond(f"{teban_user}の手番です", replace_original=False)
+        respond(f"<@{teban_user}> の手番です", replace_original=False)
 
 
 def lose_confirm(respond, body):
+    user = body["user"]["id"]
     ts = body["message"]["ts"]
     status = body["message"]["blocks"][2]["block_id"]
+    (
+        ban,
+        teban_motigoma,
+        unteban_motigoma,
+        teban_user,
+        unteban_user,
+        last_sashite,
+        tesu,
+    ) = deconpress_status(status)
 
-    respond(
-        blocks=generate_ephemeral_block(ts, status),
-        replace_original=False,
-    )
+    if user == teban_user:
+        respond(
+            blocks=generate_ephemeral_block(ts, status),
+            replace_original=False,
+        )
+    else:
+        respond(f"<@{teban_user}> の手番です", replace_original=False)
 
 
 def lose(respond, body, client):
@@ -184,7 +197,7 @@ def lose(respond, body, client):
         )
         respond("あなたの負けです。お疲れ様でした。")
     else:
-        respond(f"{teban_user}の手番です", replace_original=False)
+        respond(f"<@{teban_user}> の手番です", replace_original=False)
 
 
 def show(body, client):
