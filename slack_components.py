@@ -30,8 +30,8 @@ def generate_board_image(
 
             board[
                 y + 128 * i + 2 : y + 128 * i + koma.shape[0] + 2,
-                200 + x + 120 * j + 5 : 200 + x + 120 * j + koma.shape[1],
-            ] = koma[:, 5:]
+                200 + x + 120 * j + 5 : 200 + x + 120 * j + koma.shape[1] - 3,
+            ] = koma[:, 5:-3]
 
     tmp_dict = defaultdict(int)
     for i in teban_motigoma:
