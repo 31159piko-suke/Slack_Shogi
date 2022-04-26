@@ -15,12 +15,17 @@ class ShogiBaseError(Exception):
 
 
 class UndefinedFugoError(ParseInputBaseError):
-    def __init__(self, message="符号を正しく入力しましょう！"):
+    def __init__(self, message="正しく符号を入力しましょう！"):
         super().__init__(message)
 
 
 class UndefinedMomaError(ParseInputBaseError):
-    def __init__(self, message="動かす駒を指定していませんよ？"):
+    def __init__(self, message="駒を指定していませんよ？"):
+        super().__init__(message)
+
+
+class InvalidInputError(ParseInputBaseError):
+    def __init__(self, message="正しく入力しましょう！"):
         super().__init__(message)
 
 
@@ -30,17 +35,17 @@ class KomaAlreadyExistError(ShogiBaseError):
 
 
 class KomaCannotMoveError(ShogiBaseError):
-    def __init__(self, message="そこには動けませんよ！"):
+    def __init__(self, message="そこには動けませんよ！持ち駒を使う場合は「◯◯打」と入力してください！"):
         super().__init__(message)
 
 
 class KomaCannotNariError(ShogiBaseError):
-    def __init__(self, message="おっと、まだその駒は成れません..."):
+    def __init__(self, message="おっと、まだその駒は成れないようです..."):
         super().__init__(message)
 
 
 class MultipleKomaCanMoveError(ShogiBaseError):
-    def __init__(self, message="複数の駒がそのマスに移動できるみたいです。上、引、寄、左、右、直などを指定しましょう！"):
+    def __init__(self, message="複数の駒がそのマスに移動できるみたいです。上、引、寄、左、右、直などを指定指定してください！"):
         super().__init__(message)
 
 
@@ -65,5 +70,5 @@ class OteIgnorError(ShogiBaseError):
 
 
 class FunariError(ShogiBaseError):
-    def __init__(self, message="成らないと動けなくなります！"):
+    def __init__(self, message="成らないと動けなくなりますよ！"):
         super().__init__(message)
