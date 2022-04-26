@@ -1,4 +1,4 @@
-from exceptions import UndefinedMomaError, UndefinedFugoError
+from exceptions import UndefinedMomaError, UndefinedFugoError, InvalidInputError
 
 
 class ParseInput:
@@ -17,8 +17,12 @@ class ParseInput:
             sashite : "58金左"
         output:
             [7, 4, 5, None, 1, None]
-        """
 
+        input:
+            sashite : "４六角打つ"
+        output:
+            [5, 5, 6, None, None, 3]
+        """
         self.last_sashite = last_sashite
         replace_list = [
             "香車",
@@ -46,6 +50,9 @@ class ParseInput:
         dousa, sashite = self.valid_dousa(sashite)
         iti, sashite = self.valid_iti(sashite)
         nari, sashite = self.valid_nari(sashite)
+        if sashite:
+            raise InvalidInputError
+        print([suzi, dan, koma, dousa, iti, nari])
         return [suzi, dan, koma, dousa, iti, nari]
 
     def valid_fugo(self, sashite: str):
@@ -60,6 +67,11 @@ class ParseInput:
             sashite : "58金左"
         output:
             7, 4, "金左"
+
+        input:
+            sashite : "４六角打"
+        output:
+            5, 5, "角打"
         """
         fugo_dict = {
             "一": 1,
@@ -101,7 +113,7 @@ class ParseInput:
                 if len(sashite) >= 3 and sashite[2] == "同":  # ex) 88同銀
                     if suzi == self.last_sashite[0] and dan == self.last_sashite[1]:
                         return suzi, dan, sashite[3:]
-                    raise UndefinedFugoError
+                    raise InvalidInputError
                 return suzi, dan, sashite[2:]
             raise UndefinedFugoError
         raise UndefinedFugoError
@@ -112,12 +124,17 @@ class ParseInput:
         input:
             sashite : "歩"
         output:
-            "歩", ""
+            1, ""
 
         input:
             sashite : "金左"
         output:
-            "金", "左"
+            5, "左"
+
+        input:
+            sashite : "角打"
+        output:
+            6, "打"
         """
         koma_dict = {
             "歩": 1,
@@ -154,12 +171,17 @@ class ParseInput:
             sashite : "左"
         output:
             None, "左"
+
+        input:
+            sashite : "打"
+        output:
+            None, "打"
         """
         dousa_dict = {"上": 1, "引": 2, "寄": 3}
         if sashite:
             if dousa_dict.get(sashite[0]):
                 return dousa_dict.get(sashite[0]), sashite[1:]
-            return dousa_dict.get(sashite[0]), sashite
+            return None, sashite
         return None, None
 
     def valid_iti(self, sashite: str):
@@ -174,12 +196,17 @@ class ParseInput:
             sashite : "左"
         output:
             1, ""
+
+        input:
+            sashite : "打"
+        output:
+            None, "打"
         """
         iti_dict = {"左": 1, "右": 2, "直": 3}
         if sashite:
             if iti_dict.get(sashite[0]):
                 return iti_dict.get(sashite[0]), sashite[1:]
-            return iti_dict.get(sashite[0]), sashite
+            return None, sashite
         return None, None
 
     def valid_nari(self, sashite: str):
@@ -194,11 +221,16 @@ class ParseInput:
             sashite : ""
         output:
             None, None
+
+        input:
+            sashite : "打"
+        output:
+            3, []
         """
         nari_dict = {"成": 1, "不成": 2, "打": 3}
         if sashite:
             for i in range(len(sashite)):
-                if nari_dict.get(sashite[i:]):
-                    return nari_dict.get(sashite[i:]), sashite[i:]
-            return nari_dict.get(sashite[i:]), sashite
+                if nari_dict.get(sashite[: i + 1]):
+                    return nari_dict.get(sashite[: i + 1]), sashite[i + 1 :]
+            return None, sashite
         return None, None
