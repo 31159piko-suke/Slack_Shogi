@@ -5,7 +5,7 @@ class ParseInput:
     def __init__(self):
         pass
 
-    def parse(self, sashite: str, last_sashite: list):
+    def parse(self, sashite: str, last_sashite: list) -> list:
         """
         For example:
         input:
@@ -52,10 +52,9 @@ class ParseInput:
         nari, sashite = self.valid_nari(sashite)
         if sashite:
             raise InvalidInputError
-        print([suzi, dan, koma, dousa, iti, nari])
         return [suzi, dan, koma, dousa, iti, nari]
 
-    def valid_fugo(self, sashite: str):
+    def valid_fugo(self, sashite: str) -> tuple:
         """
         For example:
         input:
@@ -118,7 +117,7 @@ class ParseInput:
             raise UndefinedFugoError
         raise UndefinedFugoError
 
-    def valid_koma(self, sashite: str):
+    def valid_koma(self, sashite: str) -> tuple:
         """
         For example:
         input:
@@ -159,7 +158,7 @@ class ParseInput:
                 return koma_dict.get(sashite[: i + 1]), sashite[i + 1 :]
         raise UndefinedMomaError
 
-    def valid_dousa(self, sashite: str):
+    def valid_dousa(self, sashite: str) -> tuple:
         """
         For example:
         input:
@@ -184,7 +183,7 @@ class ParseInput:
             return None, sashite
         return None, None
 
-    def valid_iti(self, sashite: str):
+    def valid_iti(self, sashite: str) -> tuple:
         """
         For example:
         input:
@@ -209,7 +208,7 @@ class ParseInput:
             return None, sashite
         return None, None
 
-    def valid_nari(self, sashite: str):
+    def valid_nari(self, sashite: str) -> tuple:
         """
         For example:
         input:
