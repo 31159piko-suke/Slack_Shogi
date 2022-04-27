@@ -162,9 +162,7 @@ class Shogi:
     Manage the board and motigoma.
     """
 
-    def __init__(
-        self, board=None, teban_motigoma: list = None, unteban_motigoma: list = None
-    ):
+    def __init__(self, board=None, teban_motigoma: list = None, unteban_motigoma: list = None):
         if board is None:
             self.initgame = InitGame()
             self.board = self.initgame.board
@@ -282,9 +280,7 @@ class Shogi:
                         candi_dy.append(dy)
                         candi_dx.append(dx)
                         break
-                    elif self.is_teban_koma(y + dy, x - dx) or self.is_unteban_koma(
-                        y + dy, x - dx
-                    ):
+                    elif self.is_teban_koma(y + dy, x - dx) or self.is_unteban_koma(y + dy, x - dx):
                         # if other koma is found, the search in that direction is terminated.
                         break
 
@@ -447,14 +443,10 @@ class Shogi:
             for j in range(1, self.board.shape[0]):
                 dy, dx = edy * j, edx * j
                 if (y - dy >= 0) and (x + dx >= 0) and (y - dy <= 8) and (x + dx <= 8):
-                    ote_candi_koma = [
-                        -k for k, v in self.action_dict.items() if j in v[i]
-                    ]
+                    ote_candi_koma = [-k for k, v in self.action_dict.items() if j in v[i]]
                     if self.board[y - dy][x + dx] in ote_candi_koma:
                         return True
-                    if self.is_teban_koma(y - dy, x + dx) or self.is_unteban_koma(
-                        y - dy, x + dx
-                    ):
+                    if self.is_teban_koma(y - dy, x + dx) or self.is_unteban_koma(y - dy, x + dx):
                         # if other koma is found, the search in that direction is terminated.
                         break
         return False
