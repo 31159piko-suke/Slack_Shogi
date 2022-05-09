@@ -458,7 +458,6 @@ class Shogi:
                     if self.board[y - dy][x + dx] in ote_candi_koma:
                         return True
                     if self._is_teban_koma(y - dy, x + dx) or self._is_unteban_koma(y - dy, x + dx):
-
                         # if other koma is found, the search in that direction is terminated.
                         break
         return False
