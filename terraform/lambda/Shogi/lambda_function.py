@@ -5,7 +5,7 @@ from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 
 from s3 import put_s3_and_get_url
-from exceptions import ParseInputBaseError, ShogiBaseError
+from exceptions import InputBaseError, ShogiBaseError
 from slack_components import (
     generate_board_image,
     generate_board_block,
@@ -13,7 +13,7 @@ from slack_components import (
     compress_status,
     deconpress_status,
 )
-from parse_input import ParseInput
+from input import Input
 from shogi import Shogi
 
 app = App(
@@ -98,14 +98,15 @@ def update(respond, body, client):
 
     if user == teban_user:
         try:
-            parseinput = ParseInput()
-            persed_sashite = parseinput.parse(sashite, last_sashite)
-        except ParseInputBaseError as e:
+            input = Input()
+            parsed_sashite = input.parse(sashite, [8 - int(i) for i in last_sashite[:2]])
+            formated_sashite = input.format(parsed_sashite)
+        except InputBaseError as e:
             respond(str(e), replace_original=False)
         else:
             shogi = Shogi(ban, teban_motigoma, unteban_motigoma)
             try:
-                shogi.action(*persed_sashite)
+                shogi.action(*parsed_sashite)
                 tesu += 1
             except ShogiBaseError as e:
                 respond(str(e), replace_original=False)
@@ -116,7 +117,7 @@ def update(respond, body, client):
                 unteban_motigoma = shogi.unteban_motigoma
 
                 generate_board_image(
-                    user, ts, ban, teban_motigoma, unteban_motigoma, persed_sashite
+                    user, ts, ban, teban_motigoma, unteban_motigoma, parsed_sashite
                 )
                 url = put_s3_and_get_url(user, ts)
                 status = compress_status(
@@ -125,16 +126,16 @@ def update(respond, body, client):
                     unteban_motigoma,
                     teban_user,
                     unteban_user,
-                    persed_sashite,
+                    parsed_sashite,
                     tesu,
                 )
                 client.chat_update(
                     channel=channel,
                     ts=ts,
                     blocks=generate_board_block(
-                        url, status, teban_user, tesu=tesu, sashite=sashite
+                        url, status, teban_user, tesu=tesu, sashite=formated_sashite
                     ),
-                    text=f"{tesu}手目 {sashite}",
+                    text=f"{tesu}手目 {formated_sashite}",
                 )
     else:
         respond(f"<@{teban_user}> の手番です", replace_original=False)
@@ -182,16 +183,30 @@ def lose(respond, body, client):
         tesu,
     ) = deconpress_status(status)
 
+    input = Input()
+    formated_sashite = input.format(last_sashite)
+
     if user == teban_user:
         generate_board_image(
-            user, ts, ban, teban_motigoma, unteban_motigoma, 8 - np.array(last_sashite)
+            user,
+            ts,
+            ban,
+            teban_motigoma,
+            unteban_motigoma,
+            sashite=[int(i) for i in last_sashite[:2]],
         )
         url = put_s3_and_get_url(user, ts)
         client.chat_update(
             channel=channel,
             ts=ts,
             blocks=generate_board_block(
-                url, status, teban_user, tesu, is_end=True, winner=unteban_user
+                url,
+                status,
+                teban_user,
+                tesu=tesu,
+                sashite=formated_sashite,
+                is_end=True,
+                winner=unteban_user,
             ),
             text=f"{tesu}手目",
         )
@@ -217,15 +232,29 @@ def show(body, client):
         tesu,
     ) = deconpress_status(status)
 
+    input = Input()
+    formated_sashite = input.format(last_sashite)
+
     generate_board_image(
-        user, ts, ban, teban_motigoma, unteban_motigoma, 8 - np.array(last_sashite)
+        user,
+        ts,
+        ban,
+        teban_motigoma,
+        unteban_motigoma,
+        sashite=[int(i) for i in last_sashite[:2]],
     )
     url = put_s3_and_get_url(user, ts)
     client.chat_update(
         channel=channel,
         ts=ts,
         blocks=generate_board_block(
-            url, status, teban_user, tesu, is_end=is_end, winner=unteban_user
+            url,
+            status,
+            teban_user,
+            tesu=tesu,
+            sashite=formated_sashite,
+            is_end=is_end,
+            winner=unteban_user,
         ),
         text=f"{tesu}手目",
     )

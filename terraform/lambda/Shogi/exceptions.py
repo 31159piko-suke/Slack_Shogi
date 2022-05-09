@@ -1,4 +1,4 @@
-class ParseInputBaseError(Exception):
+class InputBaseError(Exception):
     def __init__(self, message):
         self.message = message
 
@@ -14,17 +14,17 @@ class ShogiBaseError(Exception):
         return f"{self.message}"
 
 
-class UndefinedFugoError(ParseInputBaseError):
+class UndefinedFugoError(InputBaseError):
     def __init__(self, message="正しく符号を入力しましょう！"):
         super().__init__(message)
 
 
-class UndefinedMomaError(ParseInputBaseError):
+class UndefinedMomaError(InputBaseError):
     def __init__(self, message="駒を指定していませんよ？"):
         super().__init__(message)
 
 
-class InvalidInputError(ParseInputBaseError):
+class InvalidInputError(InputBaseError):
     def __init__(self, message="正しく入力しましょう！"):
         super().__init__(message)
 
@@ -51,6 +51,11 @@ class MultipleKomaCanMoveError(ShogiBaseError):
 
 class UnidentifiedNariFunariError(ShogiBaseError):
     def __init__(self, message="成りますか？成りませんか？"):
+        super().__init__(message)
+
+
+class CannnotidentifiedNariFunariError(ShogiBaseError):
+    def __init__(self, message="成、不成を指定することはできません。"):
         super().__init__(message)
 
 

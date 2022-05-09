@@ -30,8 +30,8 @@ def generate_board_image(
 
             board[
                 y + 128 * i + 2 : y + 128 * i + koma.shape[0] + 2,
-                200 + x + 120 * j + 5 : 200 + x + 120 * j + koma.shape[1],
-            ] = koma[:, 5:]
+                200 + x + 120 * j + 5 : 200 + x + 120 * j + koma.shape[1] - 3,
+            ] = koma[:, 5:-3]
 
     tmp_dict = defaultdict(int)
     for i in teban_motigoma:
@@ -73,33 +73,25 @@ def compress_status(
     tesu: int = 0,
 ):
     ban = str(ban).replace("[", "").replace("]", "").replace(" ", "")
-    teban_motigoma = (
-        str(teban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
-    )
-    unteban_motigoma = (
-        str(unteban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
-    )
+    teban_motigoma = str(teban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
+    unteban_motigoma = str(unteban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
 
-    sashite = [8 - i for i in sashite[:2]]
+    sashite = sashite
     sashite = str(sashite).replace("[", "").replace("]", "").replace(" ", "")
     tesu = str(tesu)
 
-    status = "/".join(
-        [ban, teban_motigoma, unteban_motigoma, teban, unteban, sashite, tesu]
-    )
+    status = "/".join([ban, teban_motigoma, unteban_motigoma, teban, unteban, sashite, tesu])
     return status
 
 
 def deconpress_status(status: str):
     status_ = status.split("/")
-    ban = np.array(
-        [[int(i) for i in status_[0].split(",")][i : i + 9] for i in range(0, 81, 9)]
-    )
+    ban = np.array([[int(i) for i in status_[0].split(",")][i : i + 9] for i in range(0, 81, 9)])
     teban_motigoma = [int(i) for i in status_[1].split(",")] if status_[1] else []
     unteban_motigoma = [int(i) for i in status_[2].split(",")] if status_[2] else []
     teban = status_[3]
     unteban = status_[4]
-    last_sashite = [int(i) for i in status_[5].split(",")] if status_[5] else [0, 0]
+    last_sashite = [i for i in status_[5].split(",")] if status_[5] else [-1, -1]
     tesu = int(status_[6])
     return ban, teban_motigoma, unteban_motigoma, teban, unteban, last_sashite, tesu
 

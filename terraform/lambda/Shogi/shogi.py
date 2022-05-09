@@ -5,6 +5,7 @@ from exceptions import (
     KomaCannotNariError,
     MultipleKomaCanMoveError,
     UnidentifiedNariFunariError,
+    CannnotidentifiedNariFunariError,
     DonotHaveMotigomaError,
     CannotUseMotigomaError,
     OteIgnorError,
@@ -59,9 +60,9 @@ class KomaActions:
     action_dict:
         Defines the eight directions of movement for the koma.
         Each index in the list defines the number that can be advanced in that direction.
-        But `桂` is exception to the rule :(
-        For example:
+        But `桂` is exception to the rule.
 
+        For example:
         2 1 0
         3 歩 7  -> [[], [1], [], [], [], [], [], []]
         4 5 6
@@ -159,12 +160,10 @@ class Shogi:
     """
     <Class Shogi>
 
-    Manage the board and motigoma.
+    Manage the board and the motigoma.
     """
 
-    def __init__(
-        self, board=None, teban_motigoma: list = None, unteban_motigoma: list = None
-    ):
+    def __init__(self, board=None, teban_motigoma: list = None, unteban_motigoma: list = None):
         if board is None:
             self.initgame = InitGame()
             self.board = self.initgame.board
@@ -206,11 +205,11 @@ class Shogi:
             成:1, 不成:2, 打:3
         """
         if nari == 3:  # if use a motigoma
-            if (not self.is_teban_koma(y, x)) and (not self.is_unteban_koma(y, x)):
-                if self.is_motigoma(koma):
-                    if self.is_legal_utu(y, x, koma):
-                        self.use_motigoma(y, x, koma)
-                        if not self.is_ote():
+            if (not self._is_teban_koma(y, x)) and (not self._is_unteban_koma(y, x)):
+                if self._is_motigoma(koma):
+                    if self._is_legal_utu(y, x, koma):
+                        self._use_motigoma(y, x, koma)
+                        if not self._is_ote():
                             # if it's legal move, the turn goes to the opponent.
                             self.board = np.flip(self.board) * (-1)
                             self.teban_motigoma, self.unteban_motigoma = (
@@ -227,11 +226,11 @@ class Shogi:
                 raise KomaAlreadyExistError
 
         else:  # if move a koma on the board
-            if not self.is_teban_koma(y, x):
-                dy, dx = self.is_legal_move(y, x, koma, dousa, iti, nari)
-                self.remove_koma(y + dy, x - dx)
-                self.move_koma(y, x, koma, nari)
-                if not self.is_ote():
+            if not self._is_teban_koma(y, x):
+                dy, dx = self._is_legal_move(y, x, koma, dousa, iti, nari)
+                self._remove_koma(y + dy, x - dx)
+                self._move_koma(y, x, koma, nari)
+                if not self._is_ote():
                     # if it's legal move, the turn goes to the opponent.
                     self.board = np.flip(self.board) * (-1)
                     self.teban_motigoma, self.unteban_motigoma = (
@@ -243,7 +242,7 @@ class Shogi:
             else:
                 raise KomaAlreadyExistError
 
-    def is_legal_move(
+    def _is_legal_move(
         self,
         y: int,
         x: int,
@@ -259,9 +258,9 @@ class Shogi:
         Return
         ------
         dy : int
-            How many squares the koma is moved on the y-axis.
+            How many squares the koma will be moved on the y-axis.
         dx : int
-            How many squares the koma is moved on the x-axis.
+            How many squares the koma will be moved on the x-axis.
         """
         candi_dy, candi_dx = [], []
         action_candidates_list = np.array(self.action_dict[koma], dtype=object)
@@ -282,7 +281,7 @@ class Shogi:
                         candi_dy.append(dy)
                         candi_dx.append(dx)
                         break
-                    elif self.is_teban_koma(y + dy, x - dx) or self.is_unteban_koma(
+                    elif self._is_teban_koma(y + dy, x - dx) or self._is_unteban_koma(
                         y + dy, x - dx
                     ):
                         # if other koma is found, the search in that direction is terminated.
@@ -296,18 +295,25 @@ class Shogi:
 
         else:
             dy, dx = candi_dy[0], candi_dx[0]
-            if not self.can_move_koma(y, koma):
+            if not self._can_move_koma(y, koma):
                 raise FunariError
 
-            if (y <= 2 or y + dy <= 2) and nari is None and abs(koma) < 10:
+            if (
+                (y <= 2 or y + dy <= 2)
+                and (nari is None)
+                and (koma not in [5, 8, 11, 12, 13, 14, 16, 17])
+            ):
                 raise UnidentifiedNariFunariError
+
+            if (koma in [5, 8, 11, 12, 13, 14, 16, 17]) and (nari is not None):
+                raise CannnotidentifiedNariFunariError
 
             if y >= 3 and y + dy >= 3 and nari == 1:
                 raise KomaCannotNariError
 
             return (dy, dx)
 
-    def is_legal_utu(self, y: int, x: int, koma: int) -> bool:
+    def _is_legal_utu(self, y: int, x: int, koma: int) -> bool:
         """
         Check if it is a legal move when using motigoma.
 
@@ -315,9 +321,9 @@ class Shogi:
         ------
         bool
         """
-        return (not self.is_nifu(x, koma)) and (self.can_move_koma(y, koma))
+        return (not self._is_nifu(x, koma)) and (self._can_move_koma(y, koma))
 
-    def is_nifu(self, x: int, koma: int) -> bool:
+    def _is_nifu(self, x: int, koma: int) -> bool:
         """
         Check if not 二歩.
 
@@ -331,7 +337,7 @@ class Shogi:
                     return True
         return False
 
-    def can_move_koma(self, y: int, koma: int) -> bool:
+    def _can_move_koma(self, y: int, koma: int) -> bool:
         """
         Check if the koma can move.
 
@@ -346,7 +352,7 @@ class Shogi:
         else:
             return True
 
-    def is_motigoma(self, koma: int) -> bool:
+    def _is_motigoma(self, koma: int) -> bool:
         """
         Check if you have the koma.
 
@@ -356,7 +362,7 @@ class Shogi:
         """
         return True if koma in self.teban_motigoma else False
 
-    def use_motigoma(self, y: int, x: int, koma: int) -> None:
+    def _use_motigoma(self, y: int, x: int, koma: int) -> None:
         """
         Use motigoma.
 
@@ -367,7 +373,7 @@ class Shogi:
         self.teban_motigoma.remove(koma)
         self.board[y][x] = koma
 
-    def add_motigoma(self, koma: int) -> None:
+    def _add_motigoma(self, koma: int) -> None:
         """
         Add the koma to motigoma.
 
@@ -377,7 +383,7 @@ class Shogi:
         """
         self.teban_motigoma.append(int(str(koma)[-1]))
 
-    def move_koma(self, y: int, x: int, koma: int, nari: int = None) -> None:
+    def _move_koma(self, y: int, x: int, koma: int, nari: int = None) -> None:
         """
         Move the koma.
         If there is an opponent's koma, add that koma to motigoma.
@@ -386,11 +392,11 @@ class Shogi:
         ------
         None
         """
-        if self.is_unteban_koma(y, x):
-            self.add_motigoma(self.board[y][x])
+        if self._is_unteban_koma(y, x):
+            self._add_motigoma(self.board[y][x])
         self.board[y][x] = koma + 10 if nari == 1 else koma
 
-    def remove_koma(self, y: int, x: int) -> None:
+    def _remove_koma(self, y: int, x: int) -> None:
         """
         Remove the koma from its previous position (if moving the koma on the board).
 
@@ -400,7 +406,7 @@ class Shogi:
         """
         self.board[y][x] = 0
 
-    def is_ote(self) -> bool:
+    def _is_ote(self) -> bool:
         """
         Search the eight directions around the `玉`(8)
         and check if there is a koma that can put `玉`(8) in check.
@@ -435,7 +441,7 @@ class Shogi:
         ------
         bool
         """
-        y, x = self.get_gyoku_position()
+        y, x = self._get_gyoku_position()
         if self.board[y - 2][x + 1] == -3 or self.board[y - 2][x - 1] == -3:  # 桂
             # ex:
             # □ □ -3    -3 □ □
@@ -447,19 +453,15 @@ class Shogi:
             for j in range(1, self.board.shape[0]):
                 dy, dx = edy * j, edx * j
                 if (y - dy >= 0) and (x + dx >= 0) and (y - dy <= 8) and (x + dx <= 8):
-                    ote_candi_koma = [
-                        -k for k, v in self.action_dict.items() if j in v[i]
-                    ]
+                    ote_candi_koma = [-k for k, v in self.action_dict.items() if j in v[i]]
                     if self.board[y - dy][x + dx] in ote_candi_koma:
                         return True
-                    if self.is_teban_koma(y - dy, x + dx) or self.is_unteban_koma(
-                        y - dy, x + dx
-                    ):
+                    if self._is_teban_koma(y - dy, x + dx) or self._is_unteban_koma(y - dy, x + dx):
                         # if other koma is found, the search in that direction is terminated.
                         break
         return False
 
-    def get_gyoku_position(self) -> tuple:
+    def _get_gyoku_position(self) -> tuple:
         """
         Get the position of "玉"(8).
 
@@ -474,7 +476,7 @@ class Shogi:
                     gyoku_position = (y, x)
         return gyoku_position
 
-    def is_teban_koma(self, y: int, x: int) -> bool:
+    def _is_teban_koma(self, y: int, x: int) -> bool:
         """
         Check if own koma is there.
 
@@ -484,7 +486,7 @@ class Shogi:
         """
         return True if self.board[y][x] > 0 else False
 
-    def is_unteban_koma(self, y: int, x: int) -> bool:
+    def _is_unteban_koma(self, y: int, x: int) -> bool:
         """
         Check if opponent's koma is there.
 

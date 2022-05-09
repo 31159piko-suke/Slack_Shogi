@@ -130,3 +130,19 @@ dmypy.json
 
 ###
 .DS_Store
+.vscode
+archive/
+.terraform/
+
+#  Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# .tfvars files
+*.tfvars
+
+# .tfbackend files
+*.tfbackend
