@@ -244,3 +244,14 @@ class Input:
                     return self.nari_dict.get(sashite[: i + 1]), sashite[i + 1 :]
             return None, sashite
         return None, None
+
+    def display(self, parsed_sashite):
+        sashite = [int(i) if i not in ["None", None] else 0 for i in parsed_sashite]
+        suzi = str(1 + sashite[1])
+        dan = str(9 - sashite[0])
+        koma = [key for key, value in self.koma_dict.items() if value == sashite[2]][0]
+        dousa = [key for key, value in self.dousa_dict.items() if value == sashite[3]][0]
+        iti = [key for key, value in self.iti_dict.items() if value == sashite[4]][0]
+        nari = [key for key, value in self.nari_dict.items() if value == sashite[5]][0]
+
+        return "".join([suzi, dan, koma, dousa, iti, nari])
