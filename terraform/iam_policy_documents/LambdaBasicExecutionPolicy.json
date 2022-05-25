@@ -5,13 +5,11 @@
             "Sid": "LambdaBasicExecution",
             "Effect": "Allow",
             "Action": [
-                "logs:CreateLogStream",
                 "logs:CreateLogGroup",
+                "logs:CreateLogStream",
                 "logs:PutLogEvents"
             ],
-            "Resource": [
-                "arn:aws:logs:${region}:${account_id}:function:*}"
-            ]
+            "Resource": "*"
         }
     ]
 }

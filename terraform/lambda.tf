@@ -18,7 +18,7 @@ resource "aws_iam_policy" "lambda_invoke_function" {
   policy = templatefile("iam_policy_documents/LambdaInvokeFunctionPolicy.json", {
     account_id    = var.account_id
     region        = var.region,
-    function_name = "SlackShogiAction"
+    function_name = "Slack_Shogi_Action"
   })
   tags = {
     Project  = var.project,
@@ -57,13 +57,22 @@ resource "aws_lambda_function" "slack_shogi_action" {
   function_name = "${var.project}_Action"
   handler       = "lambda_function.lambda_handler"
   role          = aws_iam_role.lambda_slack_shogi_action.arn
-  runtime       = "python3.9"
-
+  runtime       = "python3.8"
+  layers = ["arn:aws:lambda:ap-northeast-1:770693421928:layer:Klayers-python38-numpy:25",
+    "arn:aws:lambda:ap-northeast-1:770693421928:layer:Klayers-python38-matplotlib:46",
+    "arn:aws:lambda:ap-northeast-1:770693421928:layer:Klayers-python38-requests:28",
+    "arn:aws:lambda:ap-northeast-1:00${var.account_id}:layer:slack-bolt:1",
+  "arn:aws:lambda:ap-northeast-1:00${var.account_id}:layer:pillow:2"]
+  environment {
+    variables = {
+      SLACK_BOT_TOKEN      = ""
+      SLACK_SIGNING_SECRET = ""
+    }
+  }
+  memory_size      = 512
+  timeout          = 180
   filename         = data.archive_file.lambda_slack_shogi_action.output_path
   source_code_hash = data.archive_file.lambda_slack_shogi_action.output_base64sha256
-
-  timeout = 180
-
   tags = {
     Project  = var.project,
     Resource = "lambda"

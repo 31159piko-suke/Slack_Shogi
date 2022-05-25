@@ -5,7 +5,8 @@
             "Sid": "S3Put",
             "Effect": "Allow",
             "Action": [
-                "s3:PutObject"
+                "s3:PutObject",
+                "s3:GetObject"
             ],
             "Resource": "arn:aws:s3:::${bucket_name}/*"
         }
