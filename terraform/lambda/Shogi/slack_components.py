@@ -130,7 +130,7 @@ def generate_board_block(
     return end_block if is_end else block
 
 
-def init_section(teban_user, unteban_user):
+def init_section(teban_user: str, unteban_user: str):
     section = {
         "type": "section",
         "text": {
