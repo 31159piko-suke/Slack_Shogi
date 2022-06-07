@@ -5,6 +5,7 @@ from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 
 from s3 import put_s3_and_get_url
+from dynamoDB import register_user
 from exceptions import InputBaseError, ShogiBaseError
 from slack_components import (
     generate_board_image,
@@ -31,32 +32,36 @@ def lambda_handler(event, context):
 
 
 @app.event("app_mention")
-def say_hello(ack, say, body, client):
+def start_game(ack, say, body, client):
     ack()
     channel = body["event"]["channel"]
     user = body["event"]["user"]
     ts = body["event"]["ts"]
 
     message = body["event"]["text"]
-    opponent = re.findall(r"<@[A-Z0-9]{9}>", message)
-
-    if len(opponent) != 1:
+    opponents_list = re.findall(r"<@[A-Z0-9]{9,11}>", message)
+    if len(opponents_list) != 2:
         say("対戦相手を一人選んでメンションしてください", replace_original=False)
     else:
-        user_dict = {0: user, 1: opponent[0][2:-1]}
-
-        hurigoma = int((np.random.random() * 2 // 1))
-        teban_user = user_dict[hurigoma]
-        unteban_user = user_dict[hurigoma ^ 1]
-
         try:
-            _ = client.users_profile_get(user=teban_user)["profile"]
-            _ = client.users_profile_get(user=unteban_user)["profile"]
+            is_bot_0 = client.users_info(user=opponents_list[0][2:-1])["user"]["is_bot"]
+            is_bot_1 = client.users_info(user=opponents_list[1][2:-1])["user"]["is_bot"]
+
+            if not is_bot_0:
+                opponent = opponents_list[0]
+            elif not is_bot_1:
+                opponent = opponents_list[1]
+
+            user_dict = {0: user, 1: opponent[2:-1]}
+
+            hurigoma = int((np.random.random() * 2 // 1))
+            teban_user = user_dict[hurigoma]
+            unteban_user = user_dict[hurigoma ^ 1]
+            register_user(teban_user)
+            register_user(unteban_user)
         except:
             say("対戦相手を一人選んでメンションしてください", replace_original=False)
         else:
-            say(f"*先手   <@{teban_user}> *    vs    * <@{unteban_user}>   後手*")
-
             shogi = Shogi()
             ban = shogi.board.tolist()
             teban_motigoma = shogi.teban_motigoma
@@ -71,7 +76,9 @@ def say_hello(ack, say, body, client):
             say(
                 channel=channel,
                 text="shogi",
-                blocks=generate_board_block(url, status, teban_user),
+                blocks=generate_board_block(
+                    teban_user, unteban_user, url, status, teban_user
+                ),
             )
 
 
@@ -99,7 +106,9 @@ def update(respond, body, client):
     if user == teban_user:
         try:
             input = Input()
-            parsed_sashite = input.parse(sashite, [8 - int(i) for i in last_sashite[:2]])
+            parsed_sashite = input.parse(
+                sashite, [8 - int(i) for i in last_sashite[:2]]
+            )
             formated_sashite = input.format(parsed_sashite)
         except InputBaseError as e:
             respond(str(e), replace_original=False)
@@ -133,9 +142,18 @@ def update(respond, body, client):
                     channel=channel,
                     ts=ts,
                     blocks=generate_board_block(
-                        url, status, teban_user, tesu=tesu, sashite=formated_sashite
+                        unteban_user,
+                        teban_user,
+                        url,
+                        status,
+                        teban_user,
+                        tesu=tesu,
+                        sashite=formated_sashite,
                     ),
                     text=f"{tesu}手目 {formated_sashite}",
+                )
+                client.chat_postMessage(
+                    channel=channel, thread_ts=ts, text=f"{tesu}手目 {formated_sashite}"
                 )
     else:
         respond(f"<@{teban_user}> の手番です", replace_original=False)
@@ -144,7 +162,7 @@ def update(respond, body, client):
 def lose_confirm(respond, body):
     user = body["user"]["id"]
     ts = body["message"]["ts"]
-    status = body["message"]["blocks"][2]["block_id"]
+    status = body["message"]["blocks"][3]["block_id"]
     (
         ban,
         teban_motigoma,
@@ -200,6 +218,8 @@ def lose(respond, body, client):
             channel=channel,
             ts=ts,
             blocks=generate_board_block(
+                teban_user,
+                unteban_user,
                 url,
                 status,
                 teban_user,
@@ -219,8 +239,8 @@ def show(body, client):
     channel = body["channel"]["id"]
     user = body["user"]["id"]
     ts = body["message"]["ts"]
-    status = body["message"]["blocks"][2]["block_id"]
-    is_end = body["message"]["blocks"][2]["type"] == "section"
+    status = body["message"]["blocks"][3]["block_id"]
+    is_end = body["message"]["blocks"][3]["type"] == "section"
 
     (
         ban,
@@ -248,6 +268,8 @@ def show(body, client):
         channel=channel,
         ts=ts,
         blocks=generate_board_block(
+            teban_user,
+            unteban_user,
             url,
             status,
             teban_user,

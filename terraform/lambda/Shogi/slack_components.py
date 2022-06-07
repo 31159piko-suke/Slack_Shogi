@@ -73,20 +73,28 @@ def compress_status(
     tesu: int = 0,
 ):
     ban = str(ban).replace("[", "").replace("]", "").replace(" ", "")
-    teban_motigoma = str(teban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
-    unteban_motigoma = str(unteban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
+    teban_motigoma = (
+        str(teban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
+    )
+    unteban_motigoma = (
+        str(unteban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
+    )
 
     sashite = sashite
     sashite = str(sashite).replace("[", "").replace("]", "").replace(" ", "")
     tesu = str(tesu)
 
-    status = "/".join([ban, teban_motigoma, unteban_motigoma, teban, unteban, sashite, tesu])
+    status = "/".join(
+        [ban, teban_motigoma, unteban_motigoma, teban, unteban, sashite, tesu]
+    )
     return status
 
 
 def deconpress_status(status: str):
     status_ = status.split("/")
-    ban = np.array([[int(i) for i in status_[0].split(",")][i : i + 9] for i in range(0, 81, 9)])
+    ban = np.array(
+        [[int(i) for i in status_[0].split(",")][i : i + 9] for i in range(0, 81, 9)]
+    )
     teban_motigoma = [int(i) for i in status_[1].split(",")] if status_[1] else []
     unteban_motigoma = [int(i) for i in status_[2].split(",")] if status_[2] else []
     teban = status_[3]
@@ -97,6 +105,8 @@ def deconpress_status(status: str):
 
 
 def generate_board_block(
+    teban_user: str,
+    unteban_user: str,
     url: str,
     block_id: str,
     user: str,
@@ -106,16 +116,29 @@ def generate_board_block(
     winner: str = "",
 ):
     block = [
+        init_section(teban_user, unteban_user),
         image_section(url, tesu, sashite),
         button_section(is_end),
         input_section(block_id, user),
     ]
     end_block = [
+        init_section(teban_user, unteban_user),
         image_section(url, tesu, sashite),
         button_section(is_end),
         end_section(block_id, winner),
     ]
     return end_block if is_end else block
+
+
+def init_section(teban_user, unteban_user):
+    section = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*先手   <@{teban_user}> *    vs    * <@{unteban_user}>   後手*",
+        },
+    }
+    return section
 
 
 def image_section(url: str, tesu: str, sashite: str):

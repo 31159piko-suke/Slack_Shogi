@@ -108,12 +108,22 @@ class Input:
         sashite = [int(i) if i not in ["None", None] else 0 for i in parsed_sashite]
         suzi = str(1 + sashite[1])
         dan = str(9 - sashite[0])
-        koma = [key for key, value in self.koma_dict.items() if value == sashite[2]][0]
-        dousa = [key for key, value in self.dousa_dict.items() if value == sashite[3]][0]
-        iti = [key for key, value in self.iti_dict.items() if value == sashite[4]][0]
-        nari = [key for key, value in self.nari_dict.items() if value == sashite[5]][0]
-
-        return "".join([suzi, dan, koma, dousa, iti, nari])
+        if len(sashite) > 3:
+            koma = [
+                key for key, value in self.koma_dict.items() if value == sashite[2]
+            ][0]
+            dousa = [
+                key for key, value in self.dousa_dict.items() if value == sashite[3]
+            ][0]
+            iti = [key for key, value in self.iti_dict.items() if value == sashite[4]][
+                0
+            ]
+            nari = [
+                key for key, value in self.nari_dict.items() if value == sashite[5]
+            ][0]
+            return "".join([suzi, dan, koma, dousa, iti, nari])
+        else:
+            return ""
 
     def _valid_fugo(self, sashite: str) -> tuple:
         """
@@ -139,7 +149,9 @@ class Input:
 
         elif len(sashite) >= 2:  # ex) 76歩
             if self.fugo_dict.get(sashite[0]) and self.fugo_dict.get(sashite[1]):
-                suzi, dan = self.fugo_dict.get(sashite[0]), self.fugo_dict.get(sashite[1])
+                suzi, dan = self.fugo_dict.get(sashite[0]), self.fugo_dict.get(
+                    sashite[1]
+                )
                 suzi, dan = dan - 1, 9 - suzi
                 if len(sashite) >= 3 and sashite[2] == "同":  # ex) 88同銀
                     if suzi == self.last_sashite[0] and dan == self.last_sashite[1]:
@@ -244,14 +256,3 @@ class Input:
                     return self.nari_dict.get(sashite[: i + 1]), sashite[i + 1 :]
             return None, sashite
         return None, None
-
-    def display(self, parsed_sashite):
-        sashite = [int(i) if i not in ["None", None] else 0 for i in parsed_sashite]
-        suzi = str(1 + sashite[1])
-        dan = str(9 - sashite[0])
-        koma = [key for key, value in self.koma_dict.items() if value == sashite[2]][0]
-        dousa = [key for key, value in self.dousa_dict.items() if value == sashite[3]][0]
-        iti = [key for key, value in self.iti_dict.items() if value == sashite[4]][0]
-        nari = [key for key, value in self.nari_dict.items() if value == sashite[5]][0]
-
-        return "".join([suzi, dan, koma, dousa, iti, nari])
