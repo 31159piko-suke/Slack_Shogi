@@ -4,7 +4,7 @@
 resource "aws_iam_policy" "lambda_basic_execution" {
   name = "${var.project}_LambdaBasicExecution"
   policy = templatefile("iam_policy_documents/LambdaBasicExecutionPolicy.json", {
-    account_id = var.account_id
+    account_id = "00" + var.account_id
     region     = var.region
   })
   tags = {
@@ -16,7 +16,7 @@ resource "aws_iam_policy" "lambda_basic_execution" {
 resource "aws_iam_policy" "lambda_invoke_function" {
   name = "${var.project}_LambdaInvokeFunction"
   policy = templatefile("iam_policy_documents/LambdaInvokeFunctionPolicy.json", {
-    account_id    = var.account_id
+    account_id    = "00" + var.account_id
     region        = var.region,
     function_name = "Slack_Shogi_Action"
   })
@@ -65,8 +65,8 @@ resource "aws_lambda_function" "slack_shogi_action" {
   "arn:aws:lambda:ap-northeast-1:00${var.account_id}:layer:pillow:2"]
   environment {
     variables = {
-      SLACK_BOT_TOKEN      = ""
-      SLACK_SIGNING_SECRET = ""
+      SLACK_BOT_TOKEN      = var.SLACK_BOT_TOKEN
+      SLACK_SIGNING_SECRET = var.SLACK_SIGNING_SECRET
     }
   }
   memory_size      = 512
