@@ -3,10 +3,7 @@
 # --------------------
 resource "aws_iam_policy" "lambda_basic_execution" {
   name = "${var.project}_LambdaBasicExecution"
-  policy = templatefile("iam_policy_documents/LambdaBasicExecutionPolicy.json", {
-    account_id = "00" + var.account_id
-    region     = var.region
-  })
+  policy = file("iam_policy_documents/LambdaBasicExecutionPolicy.json")
   tags = {
     Project  = var.project,
     Resource = "iam_policy"
@@ -16,7 +13,7 @@ resource "aws_iam_policy" "lambda_basic_execution" {
 resource "aws_iam_policy" "lambda_invoke_function" {
   name = "${var.project}_LambdaInvokeFunction"
   policy = templatefile("iam_policy_documents/LambdaInvokeFunctionPolicy.json", {
-    account_id    = "00" + var.account_id
+    account_id    = var.account_id
     region        = var.region,
     function_name = "Slack_Shogi_Action"
   })
