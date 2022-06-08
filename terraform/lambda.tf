@@ -2,7 +2,7 @@
 # Lambda IAM Policy
 # --------------------
 resource "aws_iam_policy" "lambda_basic_execution" {
-  name = "${var.project}_LambdaBasicExecution"
+  name   = "${var.project}_LambdaBasicExecution"
   policy = file("iam_policy_documents/LambdaBasicExecutionPolicy.json")
   tags = {
     Project  = var.project,
@@ -62,8 +62,13 @@ resource "aws_lambda_function" "slack_shogi_action" {
   "arn:aws:lambda:ap-northeast-1:00${var.account_id}:layer:pillow:2"]
   environment {
     variables = {
-      SLACK_BOT_TOKEN      = var.SLACK_BOT_TOKEN
-      SLACK_SIGNING_SECRET = var.SLACK_SIGNING_SECRET
+      SLACK_SIGNING_SECRET              = var.SLACK_SIGNING_SECRET
+      SLACK_CLIENT_ID                   = var.SLACK_CLIENT_ID
+      SLACK_CLIENT_SECRET               = var.SLACK_CLIENT_SECRET
+      SLACK_SCOPES                      = var.SLACK_SCOPES
+      SLACK_INSTALLATION_S3_BUCKET_NAME = var.SLACK_INSTALLATION_S3_BUCKET_NAME
+      SLACK_STATE_S3_BUCKET_NAME        = var.SLACK_STATE_S3_BUCKET_NAME
+
     }
   }
   memory_size      = 512

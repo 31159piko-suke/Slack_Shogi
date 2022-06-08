@@ -3,6 +3,7 @@ import re
 import numpy as np
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
+from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 
 from s3 import put_s3_and_get_url
 from dynamoDB import register_user
@@ -19,20 +20,31 @@ from shogi import Shogi
 
 app = App(
     process_before_response=True,
-    token=os.environ.get("SLACK_BOT_TOKEN"),
-    signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
+    oauth_flow=LambdaS3OAuthFlow(),
 )
 
 
 def lambda_handler(event, context):
-    if event["headers"].get("X-Slack-Retry-Num", False):
-        return {"statusCode": 200, "body": "no need retry"}
     slack_handler = SlackRequestHandler(app=app)
     return slack_handler.handle(event, context)
 
 
+@app.use
+def no_retry(context, ack, next):
+    if (
+        context.get("lambda_request", {})
+        .get("headers", {})
+        .get("x-slack-retry-num", False)
+    ):
+        ack()
+        return 200
+    else:
+        next()
+
+
 @app.event("app_mention")
-def start_game(ack, say, body, client):
+def start_game(ack, say, body, client, logger):
+    logger.info(body)
     ack()
     channel = body["event"]["channel"]
     user = body["event"]["user"]
@@ -44,8 +56,16 @@ def start_game(ack, say, body, client):
         say("対戦相手を一人選んでメンションしてください", replace_original=False)
     else:
         try:
-            is_bot_0 = client.users_info(user=opponents_list[0][2:-1])["user"]["is_bot"]
-            is_bot_1 = client.users_info(user=opponents_list[1][2:-1])["user"]["is_bot"]
+            is_bot_0 = (
+                client.users_info(user=opponents_list[0][2:-1])
+                .get("user", {})
+                .get("is_bot", True)
+            )
+            is_bot_1 = (
+                client.users_info(user=opponents_list[1][2:-1])
+                .get("user", {})
+                .get("is_bot", True)
+            )
 
             if not is_bot_0:
                 opponent = opponents_list[0]
@@ -109,7 +129,7 @@ def update(respond, body, client):
             parsed_sashite = input.parse(
                 sashite, [8 - int(i) for i in last_sashite[:2]]
             )
-            formated_sashite = input.format(parsed_sashite)
+            formated_sashite = input.format(parsed_sashite, tesu)
         except InputBaseError as e:
             respond(str(e), replace_original=False)
         else:
@@ -202,7 +222,7 @@ def lose(respond, body, client):
     ) = deconpress_status(status)
 
     input = Input()
-    formated_sashite = input.format(last_sashite)
+    formated_sashite = input.format(last_sashite, tesu)
 
     if user == teban_user:
         generate_board_image(
@@ -253,7 +273,7 @@ def show(body, client):
     ) = deconpress_status(status)
 
     input = Input()
-    formated_sashite = input.format(last_sashite)
+    formated_sashite = input.format(last_sashite, tesu)
 
     generate_board_image(
         user,
