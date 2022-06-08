@@ -5,10 +5,16 @@
             "Sid": "S3Put",
             "Effect": "Allow",
             "Action": [
-                "s3:PutObject",
-                "s3:GetObject"
+                "s3:Get*",
+                "s3:Put*",
+                "s3:Delete*",
+                "s3-object-lambda:*"
             ],
-            "Resource": "arn:aws:s3:::${bucket_name}/*"
+            "Resource": [
+                "arn:aws:s3:::${bucket_name}/*",
+                "arn:aws:s3:::${bucket_installation}/*",
+                "arn:aws:s3:::${bucket_state}/*"
+            ]
         }
     ]
 }
