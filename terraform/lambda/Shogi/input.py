@@ -104,11 +104,14 @@ class Input:
 
         return [suzi, dan, koma, dousa, iti, nari]
 
-    def format(self, parsed_sashite):
+    def format(self, parsed_sashite, tesu):
         sashite = [int(i) if i not in ["None", None] else 0 for i in parsed_sashite]
-        suzi = str(1 + sashite[1])
-        dan = str(9 - sashite[0])
         if len(sashite) > 3:
+            sente_suzi = str(9 - sashite[1]) if tesu % 2 == 0 else str(1 + sashite[1])
+            sente_dan = str(1 + sashite[0]) if tesu % 2 == 0 else str(9 - sashite[0])
+            gote_suzi = str(1 + sashite[1]) if tesu % 2 == 0 else str(9 - sashite[1])
+            gote_dan = str(9 - sashite[0]) if tesu % 2 == 0 else str(1 + sashite[0])
+
             koma = [
                 key for key, value in self.koma_dict.items() if value == sashite[2]
             ][0]
@@ -121,7 +124,12 @@ class Input:
             nari = [
                 key for key, value in self.nari_dict.items() if value == sashite[5]
             ][0]
-            return "".join([suzi, dan, koma, dousa, iti, nari])
+            return (
+                "".join([sente_suzi, sente_dan, koma, dousa, iti, nari])
+                + " ("
+                + "".join([gote_suzi, gote_dan, koma, dousa, iti, nari])
+                + ")"
+            )
         else:
             return ""
 
