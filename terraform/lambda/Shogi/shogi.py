@@ -163,7 +163,9 @@ class Shogi:
     Manage the board and the motigoma.
     """
 
-    def __init__(self, board=None, teban_motigoma: list = None, unteban_motigoma: list = None):
+    def __init__(
+        self, board=None, teban_motigoma: list = None, unteban_motigoma: list = None
+    ):
         if board is None:
             self.initgame = InitGame()
             self.board = self.initgame.board
@@ -296,7 +298,7 @@ class Shogi:
 
         else:
             dy, dx = candi_dy[0], candi_dx[0]
-            if not self._can_move_koma(y, koma):
+            if not self._can_move_koma(y, koma, nari):
                 raise FunariError
 
             if (
@@ -338,7 +340,7 @@ class Shogi:
                     return True
         return False
 
-    def _can_move_koma(self, y: int, koma: int) -> bool:
+    def _can_move_koma(self, y: int, koma: int, nari: int) -> bool:
         """
         Check if the koma can move.
 
@@ -346,9 +348,9 @@ class Shogi:
         ------
         bool
         """
-        if (koma == 1 or koma == 2) and (y == 0):
+        if (koma == 1 or koma == 2) and (y == 0) and (nari != 1):
             return False
-        elif koma == 3 and y <= 1:
+        elif koma == 3 and y <= 1 and (nari != 1):
             return False
         else:
             return True
@@ -454,10 +456,14 @@ class Shogi:
             for j in range(1, self.board.shape[0]):
                 dy, dx = edy * j, edx * j
                 if (y - dy >= 0) and (x + dx >= 0) and (y - dy <= 8) and (x + dx <= 8):
-                    ote_candi_koma = [-k for k, v in self.action_dict.items() if j in v[i]]
+                    ote_candi_koma = [
+                        -k for k, v in self.action_dict.items() if j in v[i]
+                    ]
                     if self.board[y - dy][x + dx] in ote_candi_koma:
                         return True
-                    if self._is_teban_koma(y - dy, x + dx) or self._is_unteban_koma(y - dy, x + dx):
+                    if self._is_teban_koma(y - dy, x + dx) or self._is_unteban_koma(
+                        y - dy, x + dx
+                    ):
                         # if other koma is found, the search in that direction is terminated.
                         break
         return False
