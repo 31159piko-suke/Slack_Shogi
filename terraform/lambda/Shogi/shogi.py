@@ -286,7 +286,6 @@ class Shogi:
                     elif self._is_teban_koma(y + dy, x - dx) or self._is_unteban_koma(
                         y + dy, x - dx
                     ):
-
                         # if other koma is found, the search in that direction is terminated.
                         break
 
@@ -324,7 +323,7 @@ class Shogi:
         ------
         bool
         """
-        return (not self._is_nifu(x, koma)) and (self._can_move_koma(y, koma))
+        return (not self._is_nifu(x, koma)) and (self._can_move_koma(y, koma, nari=1))
 
     def _is_nifu(self, x: int, koma: int) -> bool:
         """
