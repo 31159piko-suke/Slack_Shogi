@@ -12,3 +12,4 @@ variable "SLACK_CLIENT_SECRET" {}
 variable "SLACK_SCOPES" {}
 variable "SLACK_INSTALLATION_S3_BUCKET_NAME" {}
 variable "SLACK_STATE_S3_BUCKET_NAME" {}
+variable "MPLCONFIGDIR" {}

@@ -68,6 +68,7 @@ resource "aws_lambda_function" "slack_shogi_action" {
       SLACK_SCOPES                      = var.SLACK_SCOPES
       SLACK_INSTALLATION_S3_BUCKET_NAME = var.SLACK_INSTALLATION_S3_BUCKET_NAME
       SLACK_STATE_S3_BUCKET_NAME        = var.SLACK_STATE_S3_BUCKET_NAME
+      MPLCONFIGDIR                      = var.MPLCONFIGDIR
 
     }
   }
