@@ -135,7 +135,7 @@ def init_section(teban_user: str, unteban_user: str):
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": f"*先手   <@{teban_user}> *    vs    * <@{unteban_user}>   後手*",
+            "text": f"*先手   <@{teban_user}> *    vs    *<@{unteban_user}>   後手*",
         },
     }
     return section
