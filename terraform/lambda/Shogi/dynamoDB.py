@@ -3,7 +3,7 @@ import time
 import boto3
 
 
-def register_user(user_id):
+def update_user(user_id):
     DYNAMODB_TABLE_NAME = "Slack_Shogi_UserManage"
     REGION_NAME = os.environ["AWS_REGION"]
 
@@ -11,6 +11,6 @@ def register_user(user_id):
     table = dynamodb.Table(DYNAMODB_TABLE_NAME)
     table.update_item(
         Key={"UserID": user_id},
-        UpdateExpression="set LastCallTime=:lct",
-        ExpressionAttributeValues={":lct": str(time.time())},
+        UpdateExpression="set LastCallTime=:lct add GamesPlayedNnumber :gpn",
+        ExpressionAttributeValues={":lct": str(time.time()), ":gpn": 1},
     )
