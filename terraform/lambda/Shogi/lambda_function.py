@@ -4,9 +4,10 @@ import numpy as np
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
+from slack_bolt.response.response import BoltResponse
 
 from s3 import put_s3_and_get_url
-from dynamoDB import register_user
+from dynamoDB import update_user
 from exceptions import InputBaseError, ShogiBaseError
 from slack_components import (
     generate_board_image,
@@ -17,6 +18,7 @@ from slack_components import (
 )
 from input import Input
 from shogi import Shogi
+
 
 app = App(
     process_before_response=True,
@@ -30,20 +32,19 @@ def lambda_handler(event, context):
 
 
 @app.use
-def no_retry(context, ack, next):
+def no_retry(context, next):
     if (
         context.get("lambda_request", {})
         .get("headers", {})
         .get("x-slack-retry-num", False)
     ):
-        ack()
-        return 200
+        return BoltResponse(status=200, body="no need retry")
     else:
         next()
 
 
 @app.event("app_mention")
-def start_game(ack, say, body, client, logger):
+def start_game(ack, say, respond, body, client, logger):
     logger.info(body)
     ack()
     channel = body["event"]["channel"]
@@ -53,7 +54,7 @@ def start_game(ack, say, body, client, logger):
     message = body["event"]["text"]
     opponents_list = re.findall(r"<@[A-Z0-9]{9,11}>", message)
     if len(opponents_list) != 2:
-        say("対戦相手を一人選んでメンションしてください", replace_original=False)
+        say("対局相手を一人選んでメンションしてください", replace_original=False)
     else:
         try:
             is_bot_0 = (
@@ -77,10 +78,14 @@ def start_game(ack, say, body, client, logger):
             hurigoma = int((np.random.random() * 2 // 1))
             teban_user = user_dict[hurigoma]
             unteban_user = user_dict[hurigoma ^ 1]
-            register_user(teban_user)
-            register_user(unteban_user)
+
+            update_user(teban_user)
+            update_user(unteban_user)
         except:
-            say("対戦相手を一人選んでメンションしてください", replace_original=False)
+            say(
+                "対局相手を一人選んでメンションしてください。Botとこのワークスペースに存在しないユーザとは対局ができません。",
+                replace_original=False,
+            )
         else:
             shogi = Shogi()
             ban = shogi.board.tolist()
@@ -106,13 +111,13 @@ def arc_func(ack):
     ack()
 
 
-def update(respond, body, client):
+def update(respond, body, client, logger):
+    logger.info(body)
     channel = body["channel"]["id"]
     user = body["user"]["id"]
     ts = body["message"]["ts"]
     status = body["actions"][0]["block_id"]
     sashite = body["actions"][0]["value"]
-
     (
         ban,
         teban_motigoma,
