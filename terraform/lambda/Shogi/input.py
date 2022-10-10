@@ -105,6 +105,13 @@ class Input:
         return [suzi, dan, koma, dousa, iti, nari]
 
     def format(self, parsed_sashite, tesu):
+        """
+        For example:
+        input:
+            parsed_sashite : [5, 2, 1, None, None, None]
+        output:
+            '76歩'
+        """
         sashite = [int(i) if i not in ["None", None] else 0 for i in parsed_sashite]
         if len(sashite) > 3:
             sente_suzi = str(9 - sashite[1]) if tesu % 2 == 0 else str(1 + sashite[1])
