@@ -15,7 +15,7 @@ class ShogiBaseError(Exception):
 
 
 class UndefinedFugoError(InputBaseError):
-    def __init__(self, message="正しく符号を入力しましょう！"):
+    def __init__(self, message="符号を正しく入力しましょう！"):
         super().__init__(message)
 
 
@@ -25,7 +25,7 @@ class UndefinedMomaError(InputBaseError):
 
 
 class InvalidInputError(InputBaseError):
-    def __init__(self, message="正しく入力しましょう！"):
+    def __init__(self, message="正しいフォーマットで入力しましょう！"):
         super().__init__(message)
 
 
@@ -60,7 +60,7 @@ class CannnotidentifiedNariFunariError(ShogiBaseError):
 
 
 class DonotHaveMotigomaError(ShogiBaseError):
-    def __init__(self, message="いつから駒を持っていると錯覚しました...？"):
+    def __init__(self, message="あれれ、その駒は持っていませんよ！"):
         super().__init__(message)
 
 
