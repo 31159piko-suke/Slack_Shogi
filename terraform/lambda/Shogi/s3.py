@@ -3,6 +3,9 @@ from botocore.client import Config
 
 
 def generate_presignedurl(user: str, ts: str):
+    """
+    Create a link to retrieve images from s3 with 12 hours validity.
+    """
     S3_BUCKET_NAME = "slack-shogi"
     s3path = f"{user}/{ts}.jpg"
 
@@ -20,6 +23,9 @@ def generate_presignedurl(user: str, ts: str):
 
 
 def put_s3_and_get_url(user: str, ts: str):
+    """
+    Upload an board image to s3 and return a link to retrieve the image.
+    """
     S3_BUCKET_NAME = "slack-shogi"
     s3path = f"{user}/{ts}.jpg"
 

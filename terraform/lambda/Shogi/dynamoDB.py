@@ -4,6 +4,9 @@ import boto3
 
 
 def update_user(user_id):
+    """
+    Records the last played time and the number of games played.
+    """
     DYNAMODB_TABLE_NAME = "Slack_Shogi_UserManage"
     REGION_NAME = os.environ["AWS_REGION"]
 
