@@ -43,10 +43,8 @@ def no_retry(context, next):
         next()
 
 
-@app.event("app_mention")
-def start_game(ack, say, respond, body, client, logger):
+def start_game(say, body, client, logger):
     logger.info(body)
-    ack()
     channel = body["event"]["channel"]
     user = body["event"]["user"]
     ts = body["event"]["ts"]
@@ -95,7 +93,11 @@ def start_game(ack, say, respond, body, client, logger):
             generate_board_image(user, ts, ban)
             url = put_s3_and_get_url(user, ts)
             status = compress_status(
-                ban, teban_motigoma, unteban_motigoma, teban_user, unteban_user
+                ban,
+                teban_motigoma,
+                unteban_motigoma,
+                teban_user,
+                unteban_user,
             )
 
             say(
@@ -167,8 +169,8 @@ def update(respond, body, client, logger):
                     channel=channel,
                     ts=ts,
                     blocks=generate_board_block(
-                        unteban_user,
-                        teban_user,
+                        teban_user if tesu % 2 == 0 else unteban_user,
+                        unteban_user if tesu % 2 == 0 else teban_user,
                         url,
                         status,
                         teban_user,
@@ -243,8 +245,8 @@ def lose(respond, body, client):
             channel=channel,
             ts=ts,
             blocks=generate_board_block(
-                teban_user,
-                unteban_user,
+                teban_user if tesu % 2 == 0 else unteban_user,
+                unteban_user if tesu % 2 == 0 else teban_user,
                 url,
                 status,
                 teban_user,
@@ -293,8 +295,8 @@ def show(body, client):
         channel=channel,
         ts=ts,
         blocks=generate_board_block(
-            teban_user,
-            unteban_user,
+            teban_user if tesu % 2 == 0 else unteban_user,
+            unteban_user if tesu % 2 == 0 else teban_user,
             url,
             status,
             teban_user,
@@ -307,6 +309,7 @@ def show(body, client):
     )
 
 
+app.event("app_mention")(ack=arc_func, lazy=[start_game])
 app.action("plain_text_input_update-action")(ack=arc_func, lazy=[update])
 app.action("button_lose-action")(ack=arc_func, lazy=[lose])
 app.action("button_lose_confirm-action")(ack=arc_func, lazy=[lose_confirm])
