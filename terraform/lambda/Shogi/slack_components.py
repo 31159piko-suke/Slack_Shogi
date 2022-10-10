@@ -14,6 +14,10 @@ def generate_board_image(
     y: int = 32 * 2,
     x: int = 32 * 2,
 ):
+    """
+    Create an image of the board and store it under /tmp in lambda.
+    """
+
     board = Image.open("./images/board.jpg")
     board = board.resize((800 * 2, 640 * 2))
     board = np.array(board)[:, :, :3]
@@ -72,6 +76,9 @@ def compress_status(
     sashite: list = [-1, -1],
     tesu: int = 0,
 ):
+    """
+    Format the game information into a string to keep it as block_id.
+    """
     ban = str(ban).replace("[", "").replace("]", "").replace(" ", "")
     teban_motigoma = (
         str(teban_motigoma).replace("[", "").replace("]", "").replace(" ", "")
@@ -85,12 +92,23 @@ def compress_status(
     tesu = str(tesu)
 
     status = "/".join(
-        [ban, teban_motigoma, unteban_motigoma, teban, unteban, sashite, tesu]
+        [
+            ban,
+            teban_motigoma,
+            unteban_motigoma,
+            teban,
+            unteban,
+            sashite,
+            tesu,
+        ]
     )
     return status
 
 
 def deconpress_status(status: str):
+    """
+    Decompress the game information from the string specified as block_id.
+    """
     status_ = status.split("/")
     ban = np.array(
         [[int(i) for i in status_[0].split(",")][i : i + 9] for i in range(0, 81, 9)]
@@ -101,7 +119,16 @@ def deconpress_status(status: str):
     unteban = status_[4]
     last_sashite = [i for i in status_[5].split(",")] if status_[5] else [-1, -1]
     tesu = int(status_[6])
-    return ban, teban_motigoma, unteban_motigoma, teban, unteban, last_sashite, tesu
+
+    return (
+        ban,
+        teban_motigoma,
+        unteban_motigoma,
+        teban,
+        unteban,
+        last_sashite,
+        tesu,
+    )
 
 
 def generate_board_block(
@@ -115,34 +142,38 @@ def generate_board_block(
     is_end: bool = False,
     winner: str = "",
 ):
-    block = [
-        init_section(teban_user, unteban_user),
-        image_section(url, tesu, sashite),
-        button_section(is_end),
-        input_section(block_id, user),
-    ]
-    end_block = [
-        init_section(teban_user, unteban_user),
-        image_section(url, tesu, sashite),
-        button_section(is_end),
-        end_section(block_id, winner),
-    ]
-    return end_block if is_end else block
+    """
+    Create UI of SlackShogi.
+    """
+    if is_end:
+        return [
+            init_section(teban_user, unteban_user),
+            image_section(url, tesu, sashite),
+            button_section(is_end),
+            end_section(block_id, winner),
+        ]
+
+    else:
+        return [
+            init_section(teban_user, unteban_user),
+            image_section(url, tesu, sashite),
+            button_section(is_end),
+            input_section(block_id, user),
+        ]
 
 
 def init_section(teban_user: str, unteban_user: str):
-    section = {
+    return {
         "type": "section",
         "text": {
             "type": "mrkdwn",
             "text": f"*先手   <@{teban_user}> *    vs    *<@{unteban_user}>   後手*",
         },
     }
-    return section
 
 
 def image_section(url: str, tesu: str, sashite: str):
-    section = {
+    return {
         "type": "image",
         "title": {
             "type": "plain_text",
@@ -152,41 +183,40 @@ def image_section(url: str, tesu: str, sashite: str):
         "image_url": url,
         "alt_text": f"{tesu}手目 {sashite}",
     }
-    return section
 
 
 def button_section(is_end: bool = False):
-    section = {
-        "type": "actions",
-        "elements": [
-            {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "投了", "emoji": True},
-                "action_id": "button_lose_confirm-action",
-            },
-            {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
-                "action_id": "button_show-action",
-            },
-        ],
-    }
-    end_section = {
-        "type": "actions",
-        "elements": [
-            {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "再表示", "emoji": True},
-                "action_id": "button_show-action",
-            },
-        ],
-    }
-
-    return end_section if is_end else section
+    if is_end:
+        return {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "再表示", "emoji": True},
+                    "action_id": "button_show-action",
+                },
+            ],
+        }
+    else:
+        return {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "投了", "emoji": True},
+                    "action_id": "button_lose_confirm-action",
+                },
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "再表示", "emoji": True},
+                    "action_id": "button_show-action",
+                },
+            ],
+        }
 
 
 def input_section(block_id: str, user: str):
-    section = {
+    return {
         "type": "input",
         "block_id": block_id,
         "dispatch_action": True,
@@ -201,11 +231,10 @@ def input_section(block_id: str, user: str):
             "emoji": True,
         },
     }
-    return section
 
 
 def end_section(block_id: str, winner: str):
-    section = {
+    return {
         "type": "section",
         "block_id": block_id,
         "text": {
@@ -213,11 +242,10 @@ def end_section(block_id: str, winner: str):
             "text": f"*<@{winner}> の勝ちです！！*",
         },
     }
-    return section
 
 
 def generate_ephemeral_block(ts: str, status: str):
-    block = [
+    return [
         {
             "type": "section",
             "block_id": ":".join([ts, status]),
@@ -229,4 +257,3 @@ def generate_ephemeral_block(ts: str, status: str):
             },
         }
     ]
-    return block
