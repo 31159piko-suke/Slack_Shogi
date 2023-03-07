@@ -58,8 +58,8 @@ resource "aws_lambda_function" "slack_shogi_action" {
   layers = ["arn:aws:lambda:ap-northeast-1:770693421928:layer:Klayers-python38-numpy:25",
     "arn:aws:lambda:ap-northeast-1:770693421928:layer:Klayers-python38-matplotlib:46",
     "arn:aws:lambda:ap-northeast-1:770693421928:layer:Klayers-python38-requests:28",
-    "arn:aws:lambda:ap-northeast-1:00${var.account_id}:layer:slack-bolt:1",
-  "arn:aws:lambda:ap-northeast-1:00${var.account_id}:layer:pillow:2"]
+    "arn:aws:lambda:ap-northeast-1:${var.account_id}:layer:slack-bolt:1",
+  "arn:aws:lambda:ap-northeast-1:${var.account_id}:layer:pillow:2"]
   environment {
     variables = {
       SLACK_SIGNING_SECRET              = var.SLACK_SIGNING_SECRET
@@ -72,7 +72,7 @@ resource "aws_lambda_function" "slack_shogi_action" {
 
     }
   }
-  memory_size      = 512
+  memory_size      = 2024
   timeout          = 180
   filename         = data.archive_file.lambda_slack_shogi_action.output_path
   source_code_hash = data.archive_file.lambda_slack_shogi_action.output_base64sha256

@@ -9,7 +9,7 @@
                 "dynamodb:UpdateItem"
             ],
             "Resource": [
-                "arn:aws:dynamodb:${region}:00${account_id}:table/${table_name}"
+                "arn:aws:dynamodb:${region}:${account_id}:table/${table_name}"
             ]
         }
     ]

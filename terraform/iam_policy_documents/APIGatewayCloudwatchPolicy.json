@@ -14,7 +14,7 @@
                 "logs:FilterLogEvents"
             ],
             "Resource": [
-                "arn:aws:logs:${region}:00${account_id}:*:*"
+                "arn:aws:logs:${region}:${account_id}:*:*"
             ]
         }
     ]

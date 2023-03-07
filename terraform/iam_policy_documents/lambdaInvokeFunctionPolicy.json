@@ -8,7 +8,7 @@
                 "lambda:InvokeFunction",
                 "lambda:GetFunction"
             ],
-            "Resource": "arn:aws:lambda:${region}:00${account_id}:function:${function_name}"
+            "Resource": "arn:aws:lambda:${region}:${account_id}:function:${function_name}"
         }
     ]
 }
